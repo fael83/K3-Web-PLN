@@ -6,47 +6,77 @@ use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TeamMemberController extends Controller
 {
     public function index()
     {
-        $items = TeamMember::orderBy('sort_order')->paginate(15);
+        $items = DB::table('k3_team')
+            ->orderBy('sort_order')
+            ->paginate(15);
 
         return view('admin.team.index', compact('items'));
     }
 
     public function create()
     {
-        return view('admin.team.form', ['item' => new TeamMember()]);
+        return view('admin.team.form');
     }
 
     public function store(Request $request)
     {
-        $item = TeamMember::create($this->validateData($request));
-        AuditLogger::record('Tim K3', 'create', "Menambah anggota tim: {$item->position}");
+        $data = $this->validateData($request);
+
+        DB::table('k3_team')->insert([
+            'nama' => $data['nama'],
+            'jabatan' => $data['jabatan'],
+            'responsibility' => $data['responsibility'],
+            'sort_order' => $data['sort_order'],
+            'foto' => $data['foto'] ?? null,
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        AuditLogger::record('Tim K3', 'create', "Menambah anggota tim: {$data['nama']}");
 
         return redirect()->route('admin.team.index')->with('success', 'Anggota tim berhasil ditambahkan.');
     }
 
-    public function edit(TeamMember $team)
+    public function edit($id)
     {
-        return view('admin.team.form', ['item' => $team]);
+        $item = DB::table('k3_team')->where('id', $id)->first();
+
+        return view('admin.team.form', compact('item'));
     }
 
-    public function update(Request $request, TeamMember $team)
+    public function update(Request $request, $id)
     {
-        $team->update($this->validateData($request));
-        AuditLogger::record('Tim K3', 'update', "Memperbarui anggota tim: {$team->position}");
+        $data = $this->validateData($request);
+
+        DB::table('k3_team')
+            ->where('id', $id)
+            ->update([
+                'nama' => $data['nama'],
+                'jabatan' => $data['jabatan'],
+                'responsibility' => $data['responsibility'],
+                'sort_order' => $data['sort_order'],
+                'updated_at' => now(),
+            ]);
+
+        AuditLogger::record('Tim K3', 'update', "Update anggota tim: {$data['nama']}");
 
         return redirect()->route('admin.team.index')->with('success', 'Anggota tim berhasil diperbarui.');
     }
 
-    public function destroy(TeamMember $team)
+    public function destroy($id)
     {
-        $position = $team->position;
-        $team->delete();
-        AuditLogger::record('Tim K3', 'delete', "Menghapus anggota tim: {$position}");
+        $item = DB::table('k3_team')->where('id', $id)->first();
+
+        DB::table('k3_team')->where('id', $id)->delete();
+
+        AuditLogger::record('Tim K3', 'delete', "Menghapus anggota tim: {$item->nama}");
 
         return redirect()->route('admin.team.index')->with('success', 'Anggota tim berhasil dihapus.');
     }
@@ -54,11 +84,11 @@ class TeamMemberController extends Controller
     protected function validateData(Request $request): array
     {
         return $request->validate([
-            'position'       => ['required', 'string', 'max:255'],
-            'name'           => ['nullable', 'string', 'max:255'],
+            'nama' => ['required', 'string', 'max:255'],
+            'jabatan' => ['required', 'in:penanggung_jawab,ketua,sekretaris,koordinator,anggota'],
             'responsibility' => ['nullable', 'string'],
-            'level'          => ['required', 'in:'.implode(',', array_keys(TeamMember::LEVELS))],
-            'sort_order'     => ['required', 'integer', 'min:0'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'foto' => ['nullable', 'string'],
         ]);
     }
 }

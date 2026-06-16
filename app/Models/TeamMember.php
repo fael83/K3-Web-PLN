@@ -9,21 +9,19 @@ class TeamMember extends Model
 {
     use HasFactory;
 
-    protected $table = 'team_members';
+    protected $table = 'k3_team';
 
     protected $fillable = [
-        'position',
-        'name',
+        'nama',
+        'jabatan',
         'responsibility',
-        'level',
         'sort_order',
+        'foto',
+        'status',
     ];
 
-    public const LEVELS = [
-        'penanggung_jawab' => 'Penanggung Jawab',
-        'ketua'            => 'Ketua',
-        'sekretaris'       => 'Sekretaris',
-        'koordinator'      => 'Koordinator',
-        'anggota'          => 'Anggota',
-    ];
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }
