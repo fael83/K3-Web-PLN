@@ -127,9 +127,12 @@ class PublicController extends Controller
 
     public function tim()
     {
-        $members = TeamMember::orderBy('sort_order')->get();
+        $team = \Illuminate\Support\Facades\DB::table('k3_team')
+            ->where('status', 'active')
+            ->orderBy('sort_order', 'asc')
+            ->get();
 
-        return view('public.tim', compact('members'));
+        return view('public.tim', compact('team'));
     }
 
     public function denah()
