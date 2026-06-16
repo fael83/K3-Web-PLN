@@ -14,4 +14,9 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN mkdir -p storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    bootstrap/cache
+
 CMD php artisan serve --host=0.0.0.0 --port=$PORT
