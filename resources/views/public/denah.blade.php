@@ -16,12 +16,12 @@
                     <div class="ratio ratio-16x9 bg-light rounded overflow-hidden">
                         {{-- Coba denah.png, fallback ke denah.svg, lalu placeholder --}}
                         <picture>
-                            <source srcset="{{ asset('assets/denah.svg') }}" type="image/svg+xml">
-                            <img src="{{ asset('assets/denah.png') }}"
+                            <source srcset="{{ asset('assets/denahpln.png') }}" type="image/svg+xml">
+                            <img src="{{ asset('assets/denahpln.png') }}"
                                  alt="Denah Lokasi PT PLN"
                                  class="w-100 h-100 rounded"
                                  style="object-fit: contain;"
-                                 onerror="this.onerror=null; this.src='{{ asset('assets/denah.svg') }}';">
+                                 onerror="this.onerror=null; this.src='{{ asset('assets/denahpln.png') }}';">
                         </picture>
                     </div>
                     <div class="mt-2 small text-muted text-center">
@@ -32,7 +32,7 @@
             </div>
             <div class="col-lg-3">
                 <div class="card-k3 p-4 h-100">
-                    <h6 class="fw-bold mb-3">Legenda</h6>
+                    <h6 class="fw-bold mb-3">Keterangan</h6>
                     @foreach ($legend as $l)
                         <div class="d-flex align-items-center mb-2">
                             <span class="card-icon me-3" style="width:36px;height:36px;font-size:.95rem;flex:0 0 36px;">

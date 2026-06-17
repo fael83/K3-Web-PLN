@@ -8,19 +8,28 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('team_members', function (Blueprint $table) {
+        Schema::create('k3_team', function (Blueprint $table) {
             $table->id();
-            $table->string('position');
-            $table->string('name')->nullable();
+
+            $table->string('nama')->nullable();
+
+            // ini SEKALIGUS struktur organisasi
+            $table->string('jabatan');
+
             $table->text('responsibility')->nullable();
-            $table->string('level')->default('anggota'); // penanggung_jawab, ketua, sekretaris, koordinator, anggota
+
             $table->integer('sort_order')->default(0);
+
+            $table->string('foto')->nullable();
+
+            $table->enum('status', ['active', 'inactive'])->default('active');
+
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('team_members');
+        Schema::dropIfExists('k3_team');
     }
 };

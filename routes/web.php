@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeamK3Controller;
 
 /*
 |--------------------------------------------------------------------------
