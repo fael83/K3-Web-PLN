@@ -2,6 +2,25 @@
 @section('title', 'Denah Lokasi')
 
 @section('content')
+<style>
+    /* Menargetkan teks eyebrow di dalam komponen pagehead */
+    .display-font + p + p, 
+    .text-uppercase,
+    [class*="eyebrow"] { 
+        color: #ffc107 !important; 
+        opacity: 1 !important;
+    }
+
+    /* Menargetkan teks subtitle agar berwarna putih terang dan jelas */
+    ._pagehead p, 
+    .lead, 
+    header p,
+    .text-muted-p { 
+        color: #bec4cc !important; 
+        opacity: 0.9 !important; 
+    }
+</style>
+
 @include('public._pagehead', [
     'eyebrow' => 'Layout & Jalur Evakuasi',
     'title' => 'Denah Lokasi',

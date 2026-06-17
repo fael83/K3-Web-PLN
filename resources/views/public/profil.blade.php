@@ -2,17 +2,36 @@
 @section('title', 'Profil PLN')
 
 @section('content')
+<style>
+    /* Menargetkan teks eyebrow di dalam komponen pagehead halaman ini */
+    .display-font + p + p, 
+    .text-uppercase,
+    [class*="eyebrow"] { 
+        color: #ffc107 !important; 
+        opacity: 1 !important;
+    }
+
+    /* BARU: Menargetkan teks subtitle agar berwarna putih terang dan jelas */
+    ._pagehead p, 
+    .lead, 
+    header p,
+    .text-muted-p { 
+        color: #bec4cc !important; 
+        opacity: 0.9 !important; 
+    }
+</style>
+
 @include('public._pagehead', [
     'eyebrow' => 'Tentang Perusahaan',
     'title' => 'Profil PT PLN (Persero)',
     'subtitle' => 'Badan Usaha Milik Negara yang menyediakan tenaga listrik bagi kepentingan umum di seluruh Indonesia.',
 ])
 
-<section class="section">
+<div style="clear: both; display: block; width: auto; position: relative; padding: 3rem 0; background-color: #f8f9fa;">
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-8">
-                <div class="card-k3 p-4 p-lg-5 mb-4">
+                <div class="card-k3 p-4 p-lg-5 mb-4" style="position: relative; display: block; height: auto;">
                     <h4 class="fw-bold mb-3">Identitas Perusahaan</h4>
                     <dl class="row mb-0">
                         <dt class="col-sm-4 text-muted fw-normal">Nama Perusahaan</dt>
@@ -30,14 +49,14 @@
 
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <div class="card-k3 p-4 h-100">
+                        <div class="card-k3 p-4" style="position: relative; display: block; height: 100%; min-height: 180px;">
                             <div class="card-icon mb-3"><i class="bi bi-eye"></i></div>
                             <h5 class="fw-bold">Visi</h5>
                             <p class="text-muted small mb-0">Menjadi perusahaan listrik terkemuka se-Asia Tenggara dan pilihan pelanggan untuk solusi energi.</p>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card-k3 p-4 h-100">
+                        <div class="card-k3 p-4" style="position: relative; display: block; height: 100%; min-height: 180px;">
                             <div class="card-icon mb-3"><i class="bi bi-bullseye"></i></div>
                             <h5 class="fw-bold">Misi</h5>
                             <p class="text-muted small mb-0">Menjalankan bisnis kelistrikan yang berorientasi pada kepuasan pelanggan, anggota perusahaan, dan pemegang saham secara berkelanjutan.</p>
@@ -47,13 +66,13 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="card-k3 p-4 mb-4">
+                <div class="card-k3 p-4 mb-4" style="position: relative; display: block; height: auto;">
                     <h5 class="fw-bold mb-3">Budaya Perusahaan — AKHLAK</h5>
                     @foreach (['Amanah','Kompeten','Harmonis','Loyal','Adaptif','Kolaboratif'] as $b)
                         <span class="badge bg-light text-pln border me-1 mb-1 px-3 py-2">{{ $b }}</span>
                     @endforeach
                 </div>
-                <div class="card-k3 p-4 mb-4">
+                <div class="card-k3 p-4 mb-4" style="position: relative; display: block; height: auto;">
                     <h5 class="fw-bold mb-3">5 Klaster PLN</h5>
                     <ul class="list-unstyled small mb-0">
                         <li class="mb-2"><i class="bi bi-check-circle-fill text-pln me-2"></i>Pembangkitan</li>
@@ -63,7 +82,7 @@
                         <li><i class="bi bi-check-circle-fill text-pln me-2"></i>Beyond kWh / Layanan Baru</li>
                     </ul>
                 </div>
-                <div class="card-k3 p-4 bg-pln text-white" style="background: var(--pln-blue);">
+                <div class="card-k3 p-4 text-white" style="background: var(--pln-blue) !important; position: relative; display: block; height: auto;">
                     <h6 class="fw-bold mb-3 text-warning">Komitmen K3 & Lingkungan</h6>
                     <ul class="list-unstyled small mb-0">
                         <li class="mb-2"><i class="bi bi-patch-check me-2"></i>Penerapan SMK3</li>
@@ -76,5 +95,5 @@
             </div>
         </div>
     </div>
-</section>
+</div>
 @endsection
