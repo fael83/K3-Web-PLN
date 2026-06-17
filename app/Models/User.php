@@ -34,4 +34,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function hasRole(...$roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
 }

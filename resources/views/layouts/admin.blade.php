@@ -10,6 +10,10 @@
     <link href="{{ asset('assets/app.css') }}" rel="stylesheet">
 </head>
 <body class="admin-body">
+    
+@php
+    $role = auth()->user()->role ?? '';
+@endphp
 
 <aside class="sidebar" id="sidebar">
     <div class="brand d-flex align-items-center gap-2">
@@ -29,17 +33,70 @@
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
 
-        <div class="nav-section">Manajemen Data</div>
-        <a href="{{ route('admin.apd.index') }}" class="nav-link {{ request()->routeIs('admin.apd.*') ? 'active' : '' }}"><i class="bi bi-shield-shaded"></i> APD</a>
-        <a href="{{ route('admin.sop.index') }}" class="nav-link {{ request()->routeIs('admin.sop.*') ? 'active' : '' }}"><i class="bi bi-list-check"></i> SOP</a>
-        <a href="{{ route('admin.hazard.index') }}" class="nav-link {{ request()->routeIs('admin.hazard.*') ? 'active' : '' }}"><i class="bi bi-exclamation-triangle"></i> Bahaya</a>
-        <a href="{{ route('admin.incident.index') }}" class="nav-link {{ request()->routeIs('admin.incident.*') ? 'active' : '' }}"><i class="bi bi-clipboard-data"></i> Insiden</a>
-        <a href="{{ route('admin.team.index') }}" class="nav-link {{ request()->routeIs('admin.team.*') ? 'active' : '' }}"><i class="bi bi-diagram-2"></i> Tim K3</a>
-        <a href="{{ route('admin.health.index') }}" class="nav-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}"><i class="bi bi-heart-pulse"></i> Program Kesehatan</a>
+@if(in_array($role, ['sys_admin','k3_manager','k3_officer']))
+    <div class="nav-section">Manajemen Data</div>
 
-        <div class="nav-section">Sistem</div>
-        <a href="{{ route('admin.audit.index') }}" class="nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Audit Log</a>
-        <a href="{{ route('public.home') }}" target="_blank" class="nav-link"><i class="bi bi-globe"></i> Lihat Situs Publik</a>
+    <a href="{{ route('admin.apd.index') }}"
+       class="nav-link {{ request()->routeIs('admin.apd.*') ? 'active' : '' }}">
+        <i class="bi bi-shield-shaded"></i> APD
+    </a>
+
+    <a href="{{ route('admin.sop.index') }}"
+       class="nav-link {{ request()->routeIs('admin.sop.*') ? 'active' : '' }}">
+        <i class="bi bi-list-check"></i> SOP
+    </a>
+
+    <a href="{{ route('admin.hazard.index') }}"
+       class="nav-link {{ request()->routeIs('admin.hazard.*') ? 'active' : '' }}">
+        <i class="bi bi-exclamation-triangle"></i> Bahaya
+    </a>
+
+    <a href="{{ route('admin.team.index') }}"
+       class="nav-link {{ request()->routeIs('admin.team.*') ? 'active' : '' }}">
+        <i class="bi bi-diagram-2"></i> Tim K3
+    </a>
+
+    <a href="{{ route('admin.health.index') }}"
+       class="nav-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
+        <i class="bi bi-heart-pulse"></i> Program Kesehatan
+    </a>
+@endif
+
+
+@if(in_array($role, [
+    'sys_admin',
+    'k3_manager',
+    'k3_officer',
+    'department_head',
+    'employee'
+]))
+    <a href="{{ route('admin.incident.index') }}"
+       class="nav-link {{ request()->routeIs('admin.incident.*') ? 'active' : '' }}">
+        <i class="bi bi-clipboard-data"></i> Insiden
+    </a>
+@endif
+
+
+<div class="nav-section">Sistem</div>
+
+@if(in_array($role, [
+    'sys_admin',
+    'k3_manager',
+    'k3_officer',
+    'auditor'
+]))
+    <a href="{{ route('admin.audit.index') }}"
+       class="nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
+        <i class="bi bi-clock-history"></i> Audit Log
+    </a>
+@endif
+
+<a href="{{ route('public.home') }}"
+   target="_blank"
+   class="nav-link">
+    <i class="bi bi-globe"></i> Lihat Situs Publik
+</a>
+
     </div>
     <div class="p-3 border-top border-secondary">
         <form method="POST" action="{{ route('logout') }}">
@@ -57,8 +114,13 @@
         <h6 class="mb-0 fw-bold">@yield('title', 'Dashboard')</h6>
         <div class="ms-auto d-flex align-items-center gap-2">
             <div class="text-end d-none d-sm-block">
-                <div class="small fw-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
-                <div class="text-muted" style="font-size:.72rem;">{{ auth()->user()->email ?? '' }}</div>
+                <div class="small fw-semibold">
+                    {{ auth()->user()->name ?? 'Admin' }}
+                </div>
+
+                <div class="text-muted" style="font-size:.72rem;">
+                    {{ auth()->user()->role ?? '' }}
+                </div>
             </div>
             <span class="card-icon" style="width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-person"></i></span>
         </div>

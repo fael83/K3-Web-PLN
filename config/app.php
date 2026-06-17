@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
 return [
-    'name' => env('APP_NAME', 'K3 PLN'),
+    'name' => env('APP_NAME', 'K3 PLN Persero'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://k3-web-pln-production.up.railway.app'),
     'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
     'locale' => env('APP_LOCALE', 'id'),
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
