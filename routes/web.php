@@ -51,18 +51,55 @@ Route::post('/logout', [LoginController::class, 'logout'])
 | Panel Admin (wajib login)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('home');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('apd', ApdController::class)->except('show');
-    Route::resource('sop', SopController::class)->except('show');
-    Route::resource('hazard', HazardController::class)->except('show');
-    Route::resource('incident', IncidentController::class)->except('show');
-    Route::resource('team', TeamMemberController::class)->except('show');
-    Route::resource('health', HealthProgramController::class)->except('show');
+    // Dashboard
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer,department_head
+        ,employee,auditor,viewer'
+    )->group(function () {
 
-    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit.index');
+        Route::get('/', [DashboardController::class, 'index'])->name('home');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
+
+    // APD, SOP, Hazard, Health
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer'
+    )->group(function () {
+
+        Route::resource('apd', ApdController::class)->except('show');
+        Route::resource('sop', SopController::class)->except('show');
+        Route::resource('hazard', HazardController::class)->except('show');
+        Route::resource('health', HealthProgramController::class)->except('show');
+    });
+
+    // Incident
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer,department_head
+        ,employee'
+    )->group(function () {
+
+        Route::resource('incident', IncidentController::class)->except('show');
+    });
+
+    // Team K3
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer'
+    )->group(function () {
+
+        Route::resource('team', TeamMemberController::class)->except('show');
+    });
+
+    // Audit Log
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer,auditor'
+    )->group(function () {
+
+        Route::get('/audit-log', [AuditLogController::class, 'index'])
+            ->name('audit.index');
+    });
 });
 
 Route::get('/cek-php', function () {
@@ -71,5 +108,18 @@ Route::get('/cek-php', function () {
         'loaded_ini' => php_ini_loaded_file(),
         'pdo_pgsql' => extension_loaded('pdo_pgsql'),
         'pgsql' => extension_loaded('pgsql'),
+    ];
+});
+
+Route::middleware(['auth', 'role:sys_admin'])
+    ->get('/tes-role', function () {
+        return 'Middleware Role Berhasil';
+    });
+
+Route::middleware('auth')->get('/cek-role', function () {
+    return [
+        'name' => auth()->user()->name,
+        'email' => auth()->user()->email,
+        'role' => auth()->user()->role,
     ];
 });
