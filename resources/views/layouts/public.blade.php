@@ -7,6 +7,8 @@
     <title>@yield('title', 'Beranda') — Sistem Informasi K3 PT PLN (Persero)</title>
     <meta name="description" content="Sistem Informasi Keselamatan dan Kesehatan Kerja (K3) PT PLN (Persero).">
 
+    <link rel="icon" type="image/png" href="{{ asset('assets/favicon.jpg') }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
