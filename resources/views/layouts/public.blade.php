@@ -55,7 +55,7 @@
                 @auth
                     <li class="nav-item ms-lg-2">
                         <a class="btn btn-success btn-sm fw-semibold px-3" href="{{ route('admin.dashboard') }}">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            <i class="bi bi-speedometer2 me-1"></i>Kembali ke Admin
                         </a>
                     </li>
                 @else
