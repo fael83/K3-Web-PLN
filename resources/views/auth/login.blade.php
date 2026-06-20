@@ -14,7 +14,9 @@
     <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
         <div class="col-md-6 col-lg-5 col-xl-4">
             <div class="text-center text-white mb-4">
-                <span class="brand-mark mx-auto mb-3" style="width:56px;height:56px;font-size:1.8rem;"><i class="bi bi-lightning-charge-fill"></i></span>
+                <div class="text-center mb-3">
+                    <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" style="height: 60px; width: auto;" class="mx-auto d-block">
+                </div>
                 <h4 class="fw-bold display-font mb-1">Panel Admin K3 PLN</h4>
                 <p class="small text-white-50 mb-0">Sistem Informasi Keselamatan & Kesehatan Kerja</p>
             </div>
