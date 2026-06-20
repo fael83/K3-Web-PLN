@@ -77,19 +77,26 @@
 @endif
 
 
-<div class="nav-section">Sistem</div>
+@if(in_array($role, ['sys_admin','k3_manager','k3_officer','auditor']))
+    <div class="nav-section">Audit Support</div>
 
-@if(in_array($role, [
-    'sys_admin',
-    'k3_manager',
-    'k3_officer',
-    'auditor'
-]))
     <a href="{{ route('admin.audit.index') }}"
-       class="nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
-        <i class="bi bi-clock-history"></i> Audit Log
+       class="nav-link {{ request()->routeIs('admin.audit.index') ? 'active' : '' }}">
+        <i class="bi bi-clock-history"></i> Audit Trail
+    </a>
+
+    <a href="{{ route('admin.audit-checklist.index') }}"
+       class="nav-link {{ request()->routeIs('admin.audit-checklist.*') ? 'active' : '' }}">
+        <i class="bi bi-clipboard-check"></i> Audit Checklist
+    </a>
+
+    <a href="{{ route('admin.audit-evidence.index') }}"
+       class="nav-link {{ request()->routeIs('admin.audit-evidence.*') ? 'active' : '' }}">
+        <i class="bi bi-archive"></i> Evidence Package
     </a>
 @endif
+
+<div class="nav-section">Sistem</div>
 
 <a href="{{ route('public.home') }}"
    target="_blank"
