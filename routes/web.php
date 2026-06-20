@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ApdController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\AuditChecklistController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
@@ -78,11 +79,32 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
 
-    // Audit Log
+    // ─── AUDIT SUPPORT ───────────────────────────────────────────────────────
     Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {
+
+        // 6.6.1 Audit Trail
         Route::get('/audit-log', [AuditLogController::class, 'index'])
             ->name('audit.index');
+
+        // 6.6.2 Audit Checklist
+        Route::resource('audit-checklist', AuditChecklistController::class)
+            ->names('audit-checklist');
+
+        // Item per checklist
+        Route::post('/audit-checklist/{auditChecklist}/item', [AuditChecklistController::class, 'addItem'])
+            ->name('audit-checklist.item.store');
+        Route::put('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'updateItem'])
+            ->name('audit-checklist.item.update');
+        Route::delete('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'destroyItem'])
+            ->name('audit-checklist.item.destroy');
+
+        // 6.6.3 Evidence Package
+        Route::get('/audit-evidence', [AuditChecklistController::class, 'evidenceIndex'])
+            ->name('audit-evidence.index');
+        Route::post('/audit-evidence/generate', [AuditChecklistController::class, 'evidenceGenerate'])
+            ->name('audit-evidence.generate');
     });
+    // ─────────────────────────────────────────────────────────────────────────
 });
 
 /*
