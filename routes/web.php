@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ApdController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AuditChecklistController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentController; // ← TAMBAH BARIS INI
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
 use App\Http\Controllers\Admin\IncidentController;
@@ -12,7 +13,6 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TeamK3Controller;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +105,21 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->name('audit-evidence.generate');
     });
     // ─────────────────────────────────────────────────────────────────────────
+
+    // ← TAMBAH BLOK INI (Document Management)
+    Route::middleware('role:sys_admin,k3_manager')->group(function () {
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [DocumentController::class, 'index'])->name('index');
+            Route::get('/create', [DocumentController::class, 'create'])->name('create');
+            Route::post('/', [DocumentController::class, 'store'])->name('store');
+            Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
+            Route::get('/{document}/edit', [DocumentController::class, 'edit'])->name('edit');
+            Route::put('/{document}', [DocumentController::class, 'update'])->name('update');
+            Route::post('/{document}/approve', [DocumentController::class, 'approve'])->name('approve');
+            Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
+        });
+    });
+
 });
 
 /*

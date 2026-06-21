@@ -57,7 +57,7 @@
                 @auth
                     <li class="nav-item ms-lg-2">
                         <a class="btn btn-success btn-sm fw-semibold px-3" href="{{ route('admin.dashboard') }}">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            <i class="bi bi-speedometer2 me-1"></i>Kembali ke Admin
                         </a>
                     </li>
                 @else
@@ -80,15 +80,8 @@
             <div class="d-flex align-items-center gap-2 mb-3">
                 <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" height="40" class="d-inline-block">
                 <span class="h5 mb-0 text-white display-font fw-bold">K3 PT PLN (Persero)</span>
-            <div class="col-lg-5">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
-                    <span class="h5 mb-0 text-white display-font fw-bold">K3 PT PLN (Persero)</span>
-                </div>
-                <p class="small mb-0">
-                    Sistem Informasi Keselamatan dan Kesehatan Kerja untuk mewujudkan
-                    <span class="text-warning fw-semibold">Zero Harm, Zero Loss</span> di seluruh lini operasional.
-                </p>
+            
+                
             </div>
 
             <div class="col-lg-4">
