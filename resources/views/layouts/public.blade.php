@@ -19,7 +19,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-pln sticky-top">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('public.home') }}">
-            <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+            <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" height="40" class="d-inline-block align-top">
             <span>K3 <span class="text-warning">PLN</span></span>
         </a>
 
@@ -77,15 +77,11 @@
 <footer class="footer-pln pt-5 pb-4 mt-0">
     <div class="container">
         <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
-                    <span class="h5 mb-0 text-white display-font fw-bold">K3 PT PLN (Persero)</span>
-                </div>
-                <p class="small mb-0">
-                    Sistem Informasi Keselamatan dan Kesehatan Kerja untuk mewujudkan
-                    <span class="text-warning fw-semibold">Zero Harm, Zero Loss</span> di seluruh lini operasional.
-                </p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" height="40" class="d-inline-block">
+                <span class="h5 mb-0 text-white display-font fw-bold">K3 PT PLN (Persero)</span>
+            
+                
             </div>
 
             <div class="col-lg-4">
