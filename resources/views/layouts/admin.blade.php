@@ -25,10 +25,14 @@
     </div>
 
     <div class="flex-grow-1 overflow-auto py-2">
-        <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+
+        {{-- Dashboard --}}
+        <a href="{{ route('admin.dashboard') }}"
+           class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
 
+        {{-- ── MANAJEMEN DATA ── --}}
         @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer']))
             <div class="nav-section">Manajemen Data</div>
 
@@ -63,39 +67,43 @@
             </a>
         @endif
 
-        @if(in_array($role, [
-            'sys_admin',
-            'k3_manager',
-            'k3_officer',
-            'department_head',
-            'employee'
-        ]))
+        {{-- Insiden (semua role kecuali auditor/viewer) --}}
+        @if(in_array($role, ['sys_admin','k3_manager','k3_officer','department_head','employee']))
             <a href="{{ route('admin.incident.index') }}"
                class="nav-link {{ request()->routeIs('admin.incident.*') ? 'active' : '' }}">
                 <i class="bi bi-clipboard-data"></i> Insiden
             </a>
         @endif
 
+        {{-- ── AUDIT SUPPORT ── --}}
+        @if(in_array($role, ['sys_admin','k3_manager','k3_officer','auditor']))
+            <div class="nav-section">Audit Support</div>
 
-        <div class="nav-section">Sistem</div>
-
-        @if(in_array($role, [
-            'sys_admin',
-            'k3_manager',
-            'k3_officer',
-            'auditor'
-        ]))
             <a href="{{ route('admin.audit.index') }}"
-               class="nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
-                <i class="bi bi-clock-history"></i> Audit Log
+               class="nav-link {{ request()->routeIs('admin.audit.index') ? 'active' : '' }}">
+                <i class="bi bi-clock-history"></i> Audit Trail
+            </a>
+
+            <a href="{{ route('admin.audit-checklist.index') }}"
+               class="nav-link {{ request()->routeIs('admin.audit-checklist.*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check"></i> Audit Checklist
+            </a>
+
+            <a href="{{ route('admin.audit-evidence.index') }}"
+               class="nav-link {{ request()->routeIs('admin.audit-evidence.*') ? 'active' : '' }}">
+                <i class="bi bi-archive"></i> Evidence Package
             </a>
         @endif
+
+        {{-- ── SISTEM ── --}}
+        <div class="nav-section">Sistem</div>
 
         <a href="{{ route('public.home') }}"
            target="_blank"
            class="nav-link">
             <i class="bi bi-globe"></i> Lihat Situs Publik
         </a>
+
     </div>
 
     <div class="p-3 border-top border-secondary">
@@ -110,7 +118,8 @@
 
 <div class="admin-main">
     <header class="topbar d-flex align-items-center px-3 sticky-top">
-        <button class="btn btn-light d-lg-none me-2" onclick="document.getElementById('sidebar').classList.toggle('show')">
+        <button class="btn btn-light d-lg-none me-2"
+                onclick="document.getElementById('sidebar').classList.toggle('show')">
             <i class="bi bi-list"></i>
         </button>
 
@@ -118,15 +127,9 @@
 
         <div class="ms-auto d-flex align-items-center gap-2">
             <div class="text-end d-none d-sm-block">
-                <div class="small fw-semibold">
-                    {{ auth()->user()->name ?? 'Admin' }}
-                </div>
-
-                <div class="text-muted" style="font-size:.72rem;">
-                    {{ auth()->user()->role ?? '' }}
-                </div>
+                <div class="small fw-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
+                <div class="text-muted" style="font-size:.72rem;">{{ auth()->user()->role ?? '' }}</div>
             </div>
-
             <span class="card-icon" style="width:40px;height:40px;font-size:1.1rem;">
                 <i class="bi bi-person"></i>
             </span>
