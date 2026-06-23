@@ -150,6 +150,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->middleware('role:sys_admin,k3_manager')
             ->whereNumber('document');
 
+        // ✅ Route baru: buat revisi dari dokumen approved
+        Route::post('/{document}/revise', [DocumentController::class, 'revise'])
+            ->name('revise')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')
+            ->whereNumber('document');
+
         // Hapus dokumen
         Route::delete('/{document}', [DocumentController::class, 'destroy'])
             ->name('destroy')

@@ -19,14 +19,13 @@ class DocumentController extends Controller
         $this->storage = $storage;
     }
 
-    // ─── INDEX — list dokumen berdasarkan role + filter ─────────────────
+    // ─── INDEX ───────────────────────────────────────────────────────────
     public function index(Request $request)
     {
         $user = Auth::user();
 
         $query = Document::with(['uploader', 'approver']);
 
-        // Pembatasan visibilitas berdasarkan role
         if (in_array($user->role, ['sys_admin', 'k3_manager'])) {
             // Bisa lihat semua
         } elseif ($user->role === 'k3_officer') {
@@ -40,7 +39,6 @@ class DocumentController extends Controller
             $query->where('status', 'approved');
         }
 
-        // Search by title atau document_number
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -49,17 +47,14 @@ class DocumentController extends Controller
             });
         }
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by category
         if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
 
-        // Filter by department
         if ($request->filled('department')) {
             $query->where('owner_department', $request->department);
         }
@@ -81,14 +76,14 @@ class DocumentController extends Controller
         return view('admin.documents.create');
     }
 
-    // ─── STORE — upload dokumen baru, selalu draft ──────────────────────
+    // ─── STORE ───────────────────────────────────────────────────────────
     public function store(Request $request)
     {
         $this->authorizeDocumentManager();
 
         $request->validate([
             'title'            => 'required|string|max:255',
-            'document_number'  => 'required|string|unique:documents,document_number',
+            'document_number'  => 'required|string|max:255',
             'category'         => 'required|in:policy,standard,procedure,legal,form_template,record,emergency',
             'owner_department' => 'nullable|string|max:255',
             'effective_date'   => 'nullable|date',
@@ -134,17 +129,22 @@ class DocumentController extends Controller
             ->with('success', 'Dokumen berhasil diupload sebagai draft.');
     }
 
-    // ─── SHOW — detail dokumen + kontrol akses ──────────────────────────
+    // ─── SHOW ────────────────────────────────────────────────────────────
     public function show(Document $document)
     {
         $this->authorizeViewDocument($document);
 
         $document->load(['uploader', 'approver', 'versions.uploader']);
 
-        return view('admin.documents.show', compact('document'));
+        $revisionHistory = Document::with(['uploader', 'approver'])
+            ->where('document_number', $document->document_number)
+            ->orderByDesc('revision_number')
+            ->get();
+
+        return view('admin.documents.show', compact('document', 'revisionHistory'));
     }
 
-    // ─── EDIT — hanya draft yang boleh diedit ───────────────────────────
+    // ─── EDIT ────────────────────────────────────────────────────────────
     public function edit(Document $document)
     {
         $this->authorizeDraftEditor($document);
@@ -152,7 +152,7 @@ class DocumentController extends Controller
         return view('admin.documents.edit', compact('document'));
     }
 
-    // ─── UPDATE — edit draft / upload revisi baru dengan aturan jelas ───
+    // ─── UPDATE ──────────────────────────────────────────────────────────
     public function update(Request $request, Document $document)
     {
         $this->authorizeDraftEditor($document);
@@ -165,7 +165,7 @@ class DocumentController extends Controller
 
         $request->validate([
             'title'            => 'required|string|max:255',
-            'document_number'  => 'required|string|unique:documents,document_number,' . $document->id,
+            'document_number'  => 'required|string|max:255',
             'category'         => 'required|in:policy,standard,procedure,legal,form_template,record,emergency',
             'owner_department' => 'nullable|string|max:255',
             'effective_date'   => 'nullable|date',
@@ -201,7 +201,6 @@ class DocumentController extends Controller
             $document->file_name = $file->getClientOriginalName();
             $document->file_type = $file->getClientOriginalExtension();
             $document->file_size = $file->getSize();
-            $document->revision_number = $document->revision_number + 1;
             $document->status = 'draft';
             $document->approved_by = null;
             $document->approved_at = null;
@@ -227,7 +226,7 @@ class DocumentController extends Controller
             ->with('success', 'Dokumen draft berhasil diperbarui.');
     }
 
-    // ─── SUBMIT REVIEW — draft ke under_review ──────────────────────────
+    // ─── SUBMIT REVIEW ───────────────────────────────────────────────────
     public function submitReview(Document $document)
     {
         $user = Auth::user();
@@ -265,7 +264,7 @@ class DocumentController extends Controller
         return back()->with('success', 'Dokumen berhasil diajukan untuk review.');
     }
 
-    // ─── APPROVE — under_review ke approved ─────────────────────────────
+    // ─── APPROVE ─────────────────────────────────────────────────────────
     public function approve(Document $document)
     {
         $this->authorizeApprover();
@@ -276,6 +275,11 @@ class DocumentController extends Controller
             'Hanya dokumen under review yang dapat diapprove.'
         );
 
+        Document::where('document_number', $document->document_number)
+            ->where('status', 'approved')
+            ->where('id', '!=', $document->id)
+            ->update(['status' => 'obsolete']);
+
         $document->status = 'approved';
         $document->approved_by = Auth::id();
         $document->approved_at = now();
@@ -284,14 +288,14 @@ class DocumentController extends Controller
         AuditLogger::record(
             'documents',
             'approve',
-            "Dokumen {$document->document_number} disetujui",
+            "Dokumen {$document->document_number} Rev.{$document->revision_number} disetujui. Revisi lama dijadikan obsolete.",
             $document->id
         );
 
-        return back()->with('success', 'Dokumen berhasil diapprove.');
+        return back()->with('success', 'Dokumen berhasil diapprove. Revisi lama otomatis menjadi obsolete.');
     }
 
-    // ─── REJECT — under_review kembali ke draft ─────────────────────────
+    // ─── REJECT ──────────────────────────────────────────────────────────
     public function reject(Request $request, Document $document)
     {
         $this->authorizeApprover();
@@ -320,7 +324,66 @@ class DocumentController extends Controller
         return back()->with('success', 'Dokumen dikembalikan ke draft.');
     }
 
-    // ─── DESTROY — hanya admin / manager ────────────────────────────────
+    // ─── REVISE ──────────────────────────────────────────────────────────
+    public function revise(Document $document)
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            in_array($user->role, ['sys_admin', 'k3_manager', 'k3_officer']),
+            403,
+            'Anda tidak memiliki akses untuk membuat revisi.'
+        );
+
+        abort_unless(
+            $document->status === 'approved',
+            422,
+            'Hanya dokumen approved yang bisa direvisi.'
+        );
+
+        if ($user->role === 'k3_officer') {
+            abort_unless(
+                $document->uploaded_by === $user->id,
+                403,
+                'K3 Officer hanya dapat merevisi dokumen miliknya sendiri.'
+            );
+        }
+
+        $lastRevision = Document::where('document_number', $document->document_number)
+            ->max('revision_number');
+
+        $newDocument = Document::create([
+            'title'            => $document->title,
+            'document_number'  => $document->document_number,
+            'category'         => $document->category,
+            'owner_department' => $document->owner_department,
+            'description'      => $document->description,
+            'file_url'         => $document->file_url,
+            'file_name'        => $document->file_name,
+            'file_type'        => $document->file_type,
+            'file_size'        => $document->file_size,
+            'effective_date'   => $document->effective_date,
+            'review_date'      => $document->review_date,
+            'status'           => 'draft',
+            'revision_number'  => ($lastRevision ?? 0) + 1,
+            'uploaded_by'      => $user->id,
+            'approved_by'      => null,
+            'approved_at'      => null,
+            'review_note'      => null,
+        ]);
+
+        AuditLogger::record(
+            'documents',
+            'revise',
+            "Revisi baru dibuat dari {$document->document_number} Rev.{$document->revision_number} → Rev.{$newDocument->revision_number}",
+            $newDocument->id
+        );
+
+        return redirect()->route('admin.documents.edit', $newDocument)
+            ->with('success', "Revisi baru (Rev. {$newDocument->revision_number}) berhasil dibuat. Silakan upload file revisi terbaru.");
+    }
+
+    // ─── DESTROY ─────────────────────────────────────────────────────────
     public function destroy(Document $document)
     {
         $this->authorizeApprover();

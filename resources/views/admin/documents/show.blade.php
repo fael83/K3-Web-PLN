@@ -48,6 +48,14 @@
         $canManage = in_array($role, ['sys_admin', 'k3_manager', 'k3_officer']);
         $canApprove = in_array($role, ['sys_admin', 'k3_manager']);
         $isOwner = (int) ($document->uploaded_by ?? 0) === (int) (auth()->id() ?? 0);
+
+        $canSeeRevisionHistory = in_array($role, [
+            'sys_admin',
+            'k3_manager',
+            'k3_officer',
+            'auditor',
+            'department_head',
+        ]);
     @endphp
 
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
@@ -58,7 +66,11 @@
             <div>
                 <h4 class="fw-bold mb-1">Detail Dokumen</h4>
                 <div class="text-muted small">
-                    Lihat metadata, file aktif, status approval, dan riwayat revisi dokumen.
+                    @if($canSeeRevisionHistory)
+                        Lihat metadata, file aktif, status approval, dan riwayat revisi dokumen.
+                    @else
+                        Lihat metadata dan file dokumen yang berlaku.
+                    @endif
                 </div>
             </div>
         </div>
@@ -169,24 +181,27 @@
                             <th class="text-muted">Tanggal Upload</th>
                             <td>{{ optional($document->created_at)->format('d F Y, H:i') ?: '-' }}</td>
                         </tr>
-                        <tr>
-                            <th class="text-muted">Disetujui Oleh</th>
-                            <td>{{ $document->approver->name ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th class="text-muted">Disetujui Pada</th>
-                            <td>{{ optional($document->approved_at)->format('d F Y, H:i') ?: '-' }}</td>
-                        </tr>
 
-                        @if(!empty($document->review_note))
-                        <tr>
-                            <th class="text-muted">Catatan Review</th>
-                            <td>
-                                <div class="alert alert-warning mb-0 py-2 px-3">
-                                    {{ $document->review_note }}
-                                </div>
-                            </td>
-                        </tr>
+                        @if($canSeeRevisionHistory)
+                            <tr>
+                                <th class="text-muted">Disetujui Oleh</th>
+                                <td>{{ $document->approver->name ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Disetujui Pada</th>
+                                <td>{{ optional($document->approved_at)->format('d F Y, H:i') ?: '-' }}</td>
+                            </tr>
+
+                            @if(!empty($document->review_note))
+                                <tr>
+                                    <th class="text-muted">Catatan Review</th>
+                                    <td>
+                                        <div class="alert alert-warning mb-0 py-2 px-3">
+                                            {{ $document->review_note }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         @endif
                     </table>
                 </div>
@@ -217,53 +232,63 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header fw-semibold bg-light">Riwayat Revisi</div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Revisi</th>
-                                    <th>Nama File</th>
-                                    <th>Status Saat Itu</th>
-                                    <th>Uploader</th>
-                                    <th>Catatan Perubahan</th>
-                                    <th>Tanggal</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($document->versions as $version)
+            @if($canSeeRevisionHistory)
+                <div class="card shadow-sm border-0">
+                    <div class="card-header fw-semibold bg-light">Riwayat Revisi</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <td>Rev. {{ $version->revision_number }}</td>
-                                        <td>{{ $version->file_name }}</td>
-                                        <td>
-                                            <span class="badge {{ $statusClasses[$version->status] ?? 'bg-dark' }}">
-                                                {{ $statusLabels[$version->status] ?? ucfirst(str_replace('_', ' ', $version->status)) }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $version->uploader->name ?? '-' }}</td>
-                                        <td>{{ $version->change_notes ?: '-' }}</td>
-                                        <td>{{ optional($version->created_at)->format('d/m/Y H:i') ?: '-' }}</td>
-                                        <td>
-                                            <a href="{{ $version->file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-download"></i>
-                                            </a>
-                                        </td>
+                                        <th>Revisi</th>
+                                        <th>Nama File</th>
+                                        <th>Status Saat Itu</th>
+                                        <th>Uploader</th>
+                                        <th>Catatan Perubahan</th>
+                                        <th>Tanggal</th>
+                                        <th>Aksi</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            Belum ada riwayat revisi. Dokumen ini masih memakai versi awal.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @forelse($revisionHistory as $history)
+                                        <tr @class(['table-active' => $history->id === $document->id])>
+                                            <td>Rev. {{ $history->revision_number }}</td>
+                                            <td>
+                                                {{ $history->file_name }}
+                                                @if($history->id === $document->id)
+                                                    <span class="badge bg-primary ms-1">Aktif dibuka</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $statusClasses[$history->status] ?? 'bg-dark' }}">
+                                                    {{ $statusLabels[$history->status] ?? ucfirst(str_replace('_', ' ', $history->status)) }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $history->uploader->name ?? '-' }}</td>
+                                            <td>{{ $history->description ?: '-' }}</td>
+                                            <td>{{ optional($history->created_at)->format('d/m/Y H:i') ?: '-' }}</td>
+                                            <td class="text-nowrap">
+                                                <a href="{{ route('admin.documents.show', $history) }}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ $history->file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                Belum ada riwayat revisi. Dokumen ini masih memakai versi awal.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <div class="col-lg-4">
@@ -278,6 +303,16 @@
                         <a href="{{ route('admin.documents.edit', $document) }}" class="btn btn-warning">
                             <i class="bi bi-pencil me-1"></i> Edit Dokumen
                         </a>
+                    @endif
+
+                    @if($canManage && $document->status === 'approved' && ($role !== 'k3_officer' || $isOwner))
+                        <form action="{{ route('admin.documents.revise', $document) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-warning w-100"
+                                onclick="return confirm('Buat revisi baru dari dokumen ini?')">
+                                <i class="bi bi-arrow-repeat me-1"></i> Buat Revisi Baru
+                            </button>
+                        </form>
                     @endif
 
                     @if($document->status === 'draft' && $canManage && ($role !== 'k3_officer' || $isOwner))
