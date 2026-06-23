@@ -4,15 +4,17 @@ use App\Http\Controllers\Admin\ApdController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AuditChecklistController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\DocumentController; // ← TAMBAH BARIS INI
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
 use App\Http\Controllers\Admin\IncidentController;
+use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\SopController;
 use App\Http\Controllers\Admin\TeamMemberController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeamK3Controller;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +81,41 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
 
+    // ─── USER & ORGANIZATION MANAGEMENT ─────────────────────────────────────
+    Route::middleware('role:sys_admin')->group(function () {
+
+        // 6.2 User Management
+        Route::resource('users', UserManagementController::class);
+        Route::patch('/users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
+            ->name('users.toggle-active');
+        Route::patch('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
+            ->name('users.reset-password');
+
+        // 6.2.1 Organization Structure
+        Route::get('/organization', [OrganizationController::class, 'index'])
+            ->name('organization.index');
+
+        Route::post('/organization/division', [OrganizationController::class, 'storeDivision'])
+            ->name('organization.division.store');
+        Route::put('/organization/division/{division}', [OrganizationController::class, 'updateDivision'])
+            ->name('organization.division.update');
+        Route::delete('/organization/division/{division}', [OrganizationController::class, 'destroyDivision'])
+            ->name('organization.division.destroy');
+
+        Route::post('/organization/department', [OrganizationController::class, 'storeDepartment'])
+            ->name('organization.department.store');
+        Route::put('/organization/department/{department}', [OrganizationController::class, 'updateDepartment'])
+            ->name('organization.department.update');
+        Route::delete('/organization/department/{department}', [OrganizationController::class, 'destroyDepartment'])
+            ->name('organization.department.destroy');
+
+        Route::post('/organization/work-unit', [OrganizationController::class, 'storeWorkUnit'])
+            ->name('organization.work-unit.store');
+        Route::delete('/organization/work-unit/{workUnit}', [OrganizationController::class, 'destroyWorkUnit'])
+            ->name('organization.work-unit.destroy');
+    });
+    // ─────────────────────────────────────────────────────────────────────────
+
     // ─── AUDIT SUPPORT ───────────────────────────────────────────────────────
     Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {
 
@@ -105,21 +142,6 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->name('audit-evidence.generate');
     });
     // ─────────────────────────────────────────────────────────────────────────
-
-    // ← TAMBAH BLOK INI (Document Management)
-    Route::middleware('role:sys_admin,k3_manager')->group(function () {
-        Route::prefix('documents')->name('documents.')->group(function () {
-            Route::get('/', [DocumentController::class, 'index'])->name('index');
-            Route::get('/create', [DocumentController::class, 'create'])->name('create');
-            Route::post('/', [DocumentController::class, 'store'])->name('store');
-            Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
-            Route::get('/{document}/edit', [DocumentController::class, 'edit'])->name('edit');
-            Route::put('/{document}', [DocumentController::class, 'update'])->name('update');
-            Route::post('/{document}/approve', [DocumentController::class, 'approve'])->name('approve');
-            Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
-        });
-    });
-
 });
 
 /*
