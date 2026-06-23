@@ -8,11 +8,14 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
 use App\Http\Controllers\Admin\IncidentController;
+use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\SopController;
 use App\Http\Controllers\Admin\TeamMemberController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeamK3Controller;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +81,41 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('role:sys_admin,k3_manager,k3_officer')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
+
+    // ─── USER & ORGANIZATION MANAGEMENT ─────────────────────────────────────
+    Route::middleware('role:sys_admin')->group(function () {
+
+        // 6.2 User Management
+        Route::resource('users', UserManagementController::class);
+        Route::patch('/users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
+            ->name('users.toggle-active');
+        Route::patch('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
+            ->name('users.reset-password');
+
+        // 6.2.1 Organization Structure
+        Route::get('/organization', [OrganizationController::class, 'index'])
+            ->name('organization.index');
+
+        Route::post('/organization/division', [OrganizationController::class, 'storeDivision'])
+            ->name('organization.division.store');
+        Route::put('/organization/division/{division}', [OrganizationController::class, 'updateDivision'])
+            ->name('organization.division.update');
+        Route::delete('/organization/division/{division}', [OrganizationController::class, 'destroyDivision'])
+            ->name('organization.division.destroy');
+
+        Route::post('/organization/department', [OrganizationController::class, 'storeDepartment'])
+            ->name('organization.department.store');
+        Route::put('/organization/department/{department}', [OrganizationController::class, 'updateDepartment'])
+            ->name('organization.department.update');
+        Route::delete('/organization/department/{department}', [OrganizationController::class, 'destroyDepartment'])
+            ->name('organization.department.destroy');
+
+        Route::post('/organization/work-unit', [OrganizationController::class, 'storeWorkUnit'])
+            ->name('organization.work-unit.store');
+        Route::delete('/organization/work-unit/{workUnit}', [OrganizationController::class, 'destroyWorkUnit'])
+            ->name('organization.work-unit.destroy');
+    });
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ─── AUDIT SUPPORT ───────────────────────────────────────────────────────
     Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {

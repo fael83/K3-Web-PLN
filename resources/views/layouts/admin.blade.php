@@ -121,6 +121,18 @@
         {{-- ── SISTEM ── --}}
         <div class="nav-section">Sistem</div>
 
+        @if($role === 'sys_admin')
+            <a href="{{ route('admin.users.index') }}"
+               class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i> Manajemen Pengguna
+            </a>
+
+            <a href="{{ route('admin.organization.index') }}"
+               class="nav-link {{ request()->routeIs('admin.organization.*') ? 'active' : '' }}">
+                <i class="bi bi-diagram-3"></i> Struktur Organisasi
+            </a>
+        @endif
+
         <a href="{{ route('public.home') }}"
            target="_blank"
            rel="noopener noreferrer"
