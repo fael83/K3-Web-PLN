@@ -1,9 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\ApdController;
-use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AuditChecklistController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
 use App\Http\Controllers\Admin\IncidentController;
@@ -142,6 +143,71 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->name('audit-evidence.generate');
     });
     // ─────────────────────────────────────────────────────────────────────────
+
+    // ─── DOCUMENT MANAGEMENT ──────────────────────────────────────────────
+    Route::prefix('documents')->name('documents.')->group(function () {
+
+        // Lihat daftar dokumen
+        Route::get('/', [DocumentController::class, 'index'])
+            ->name('index')
+            ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer');
+
+        // Upload dokumen baru
+        Route::get('/create', [DocumentController::class, 'create'])
+            ->name('create')
+            ->middleware('role:sys_admin,k3_manager,k3_officer');
+
+        Route::post('/', [DocumentController::class, 'store'])
+            ->name('store')
+            ->middleware('role:sys_admin,k3_manager,k3_officer');
+
+        // Edit draft
+        Route::get('/{document}/edit', [DocumentController::class, 'edit'])
+            ->name('edit')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')
+            ->whereNumber('document');
+
+        Route::put('/{document}', [DocumentController::class, 'update'])
+            ->name('update')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')
+            ->whereNumber('document');
+
+        // Workflow review
+        Route::post('/{document}/submit-review', [DocumentController::class, 'submitReview'])
+            ->name('submitReview')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')
+            ->whereNumber('document');
+
+        Route::post('/{document}/approve', [DocumentController::class, 'approve'])
+            ->name('approve')
+            ->middleware('role:sys_admin,k3_manager')
+            ->whereNumber('document');
+
+        Route::post('/{document}/reject', [DocumentController::class, 'reject'])
+            ->name('reject')
+            ->middleware('role:sys_admin,k3_manager')
+            ->whereNumber('document');
+
+        // ✅ Route baru: buat revisi dari dokumen approved
+        Route::post('/{document}/revise', [DocumentController::class, 'revise'])
+            ->name('revise')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')
+            ->whereNumber('document');
+
+        // Hapus dokumen
+        Route::delete('/{document}', [DocumentController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('role:sys_admin,k3_manager')
+            ->whereNumber('document');
+
+        // Detail dokumen — TARUH PALING BAWAH
+        Route::get('/{document}', [DocumentController::class, 'show'])
+            ->name('show')
+            ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer')
+            ->whereNumber('document');
+    });
+    // ──────────────────────────────────────────────────────────────────────
+
 });
 
 /*

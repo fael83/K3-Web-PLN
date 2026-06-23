@@ -13,6 +13,23 @@
 
 @php
     $role = auth()->user()->role ?? '';
+
+    $documentRoles = [
+        'sys_admin',
+        'k3_manager',
+        'k3_officer',
+        'department_head',
+        'employee',
+        'auditor',
+        'viewer',
+    ];
+
+    $documentReadOnlyRoles = [
+        'department_head',
+        'employee',
+        'auditor',
+        'viewer',
+    ];
 @endphp
 
 <aside class="sidebar" id="sidebar">
@@ -46,11 +63,6 @@
                 <i class="bi bi-list-check"></i> SOP
             </a>
 
-            <a href="{{ route('admin.documents.index') }}"
-               class="nav-link {{ request()->routeIs('admin.documents.*') ? 'active' : '' }}">
-                <i class="bi bi-folder2-open"></i> Manajemen Dokumen
-            </a>
-
             <a href="{{ route('admin.hazard.index') }}"
                class="nav-link {{ request()->routeIs('admin.hazard.*') ? 'active' : '' }}">
                 <i class="bi bi-exclamation-triangle"></i> Bahaya
@@ -67,8 +79,19 @@
             </a>
         @endif
 
-        {{-- Insiden (semua role kecuali auditor/viewer) --}}
-        @if(in_array($role, ['sys_admin','k3_manager','k3_officer','department_head','employee']))
+        {{-- ── DOKUMEN ── --}}
+        @if(in_array($role, $documentRoles))
+            <div class="nav-section">Dokumen</div>
+
+            <a href="{{ route('admin.documents.index') }}"
+               class="nav-link {{ request()->routeIs('admin.documents.*') ? 'active' : '' }}">
+                <i class="bi bi-folder2-open"></i>
+                {{ in_array($role, $documentReadOnlyRoles) ? 'Dokumen' : 'Manajemen Dokumen' }}
+            </a>
+        @endif
+
+        {{-- Insiden --}}
+        @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer', 'department_head', 'employee']))
             <a href="{{ route('admin.incident.index') }}"
                class="nav-link {{ request()->routeIs('admin.incident.*') ? 'active' : '' }}">
                 <i class="bi bi-clipboard-data"></i> Insiden
@@ -76,7 +99,7 @@
         @endif
 
         {{-- ── AUDIT SUPPORT ── --}}
-        @if(in_array($role, ['sys_admin','k3_manager','k3_officer','auditor']))
+        @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer', 'auditor']))
             <div class="nav-section">Audit Support</div>
 
             <a href="{{ route('admin.audit.index') }}"
@@ -112,6 +135,7 @@
 
         <a href="{{ route('public.home') }}"
            target="_blank"
+           rel="noopener noreferrer"
            class="nav-link">
             <i class="bi bi-globe"></i> Lihat Situs Publik
         </a>
