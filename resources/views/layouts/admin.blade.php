@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard') — Admin K3 PLN</title>
+    
+    {{-- Favicon Aplikasi --}}
+    <link rel="shortcut icon" href="{{ asset('assets/favicon.jpg') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('assets/favicon.jpg') }}" type="image/x-icon">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -33,11 +38,14 @@
 @endphp
 
 <aside class="sidebar" id="sidebar">
-    <div class="brand d-flex align-items-center gap-2">
-        <span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+    {{-- Bagian Brand: Logo Sejajar dengan Teks --}}
+    <div class="brand d-flex align-items-center gap-3 p-3 mb-2 border-bottom border-secondary">
+        <div class="flex-shrink-0">
+            <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" style="height: 45px; width: auto;" class="d-block">
+        </div>
         <div>
-            <div class="text-white fw-bold display-font" style="font-size:1.05rem;">K3 PLN Admin</div>
-            <div class="text-white-50" style="font-size:.72rem;">Sistem Informasi K3</div>
+            <div class="text-white fw-bold display-font" style="font-size:1.05rem; line-height: 1.2;">K3 PLN Admin</div>
+            <div class="text-white-50" style="font-size:.72rem; margin-top: 2px;">Sistem Informasi K3</div>
         </div>
     </div>
 
