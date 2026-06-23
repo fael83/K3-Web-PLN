@@ -9,6 +9,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            OrganizationSeeder::class,
             AdminUserSeeder::class,
             ApdSeeder::class,
             SopStepSeeder::class,
@@ -16,6 +17,7 @@ class DatabaseSeeder extends Seeder
             IncidentSeeder::class,
             TeamMemberSeeder::class,
             HealthProgramSeeder::class,
+            AuditChecklistSeeder::class,
         ]);
     }
 }
