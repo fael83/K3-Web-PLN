@@ -22,30 +22,9 @@ class DocumentController extends Controller
     // ─── INDEX ───────────────────────────────────────────────────────────
     public function index(Request $request)
     {
-        $user = Auth::user();
-
         $query = Document::with(['uploader', 'approver']);
 
-        if (in_array($user->role, ['sys_admin', 'k3_manager'])) {
-            // Bisa lihat semua
-        } elseif ($user->role === 'k3_officer') {
-            $query->where(function ($q) use ($user) {
-                $q->where('status', 'approved')
-                  ->orWhere('uploaded_by', $user->id);
-            });
-        } elseif ($user->role === 'auditor') {
-            $query->whereIn('status', ['approved', 'obsolete']);
-        } else {
-            $query->where('status', 'approved');
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'ilike', "%{$search}%")
-                  ->orWhere('document_number', 'ilike', "%{$search}%");
-            });
-        }
+        $query->search($request->input('search'));
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -56,7 +35,7 @@ class DocumentController extends Controller
         }
 
         if ($request->filled('department')) {
-            $query->where('owner_department', $request->department);
+            $query->where('owner_department', 'ilike', '%' . $request->department . '%');
         }
 
         $documents = $query->orderByDesc('created_at')
@@ -65,7 +44,14 @@ class DocumentController extends Controller
 
         $expiringSoon = Document::expiringSoon()->count();
 
-        return view('admin.documents.index', compact('documents', 'expiringSoon'));
+        $departments = Document::query()
+            ->whereNotNull('owner_department')
+            ->where('owner_department', '!=', '')
+            ->distinct()
+            ->orderBy('owner_department')
+            ->pluck('owner_department');
+
+        return view('admin.documents.index', compact('documents', 'expiringSoon', 'departments'));
     }
 
     // ─── CREATE ──────────────────────────────────────────────────────────
@@ -97,7 +83,7 @@ class DocumentController extends Controller
 
         if (!$fileUrl) {
             return back()->withErrors([
-                'file' => 'Gagal mengupload file ke storage.',
+                'file' => 'Gagal mengupload file ke storage.'
             ])->withInput();
         }
 
@@ -141,7 +127,23 @@ class DocumentController extends Controller
             ->orderByDesc('revision_number')
             ->get();
 
-        return view('admin.documents.show', compact('document', 'revisionHistory'));
+        $canPreview = strtolower($document->file_type ?? '') === 'pdf';
+
+        return view('admin.documents.show', compact('document', 'revisionHistory', 'canPreview'));
+    }
+
+    // ─── PREVIEW ─────────────────────────────────────────────────────────
+    public function preview(Document $document)
+    {
+        $this->authorizeViewDocument($document);
+
+        abort_unless(
+            strtolower($document->file_type ?? '') === 'pdf',
+            404,
+            'Preview hanya tersedia untuk file PDF.'
+        );
+
+        return redirect()->away($document->file_url);
     }
 
     // ─── EDIT ────────────────────────────────────────────────────────────
@@ -193,7 +195,7 @@ class DocumentController extends Controller
 
             if (!$fileUrl) {
                 return back()->withErrors([
-                    'file' => 'Gagal mengupload file ke storage.',
+                    'file' => 'Gagal mengupload file ke storage.'
                 ])->withInput();
             }
 

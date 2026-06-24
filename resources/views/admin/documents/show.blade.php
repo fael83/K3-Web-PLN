@@ -6,6 +6,7 @@
 <div class="container-fluid">
     @php
         $role = auth()->user()->role ?? '';
+        $userId = auth()->id();
 
         $categoryLabels = [
             'policy'        => 'Policy',
@@ -47,7 +48,21 @@
 
         $canManage = in_array($role, ['sys_admin', 'k3_manager', 'k3_officer']);
         $canApprove = in_array($role, ['sys_admin', 'k3_manager']);
-        $isOwner = (int) ($document->uploaded_by ?? 0) === (int) (auth()->id() ?? 0);
+        $isOwner = (int) ($document->uploaded_by ?? 0) === (int) ($userId ?? 0);
+
+        $canEdit = $document->status === 'draft'
+            && (
+                in_array($role, ['sys_admin', 'k3_manager']) ||
+                ($role === 'k3_officer' && $isOwner)
+            );
+
+        $canSubmitReview = $document->status === 'draft'
+            && $canManage
+            && ($role !== 'k3_officer' || $isOwner);
+
+        $canRevise = $document->status === 'approved'
+            && $canManage
+            && ($role !== 'k3_officer' || $isOwner);
 
         $canSeeRevisionHistory = in_array($role, [
             'sys_admin',
@@ -208,14 +223,20 @@
             </div>
 
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header fw-semibold bg-light">Preview Dokumen</div>
+                <div class="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
+                    <span>Preview Dokumen</span>
+                    <a href="{{ $document->file_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Buka di Tab Baru
+                    </a>
+                </div>
                 <div class="card-body">
                     @if($isPdf)
                         <iframe
-                            src="{{ $document->file_url }}"
+                            src="{{ route('admin.documents.preview', $document) }}"
                             width="100%"
                             height="700"
-                            style="border:1px solid #dee2e6; border-radius: .5rem;">
+                            style="border:1px solid #dee2e6; border-radius:.5rem;"
+                            title="Preview {{ $document->title }}">
                         </iframe>
                     @elseif($isImage)
                         <div class="text-center">
@@ -244,7 +265,7 @@
                                         <th>Nama File</th>
                                         <th>Status Saat Itu</th>
                                         <th>Uploader</th>
-                                        <th>Catatan Perubahan</th>
+                                        <th>Catatan</th>
                                         <th>Tanggal</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -265,7 +286,7 @@
                                                 </span>
                                             </td>
                                             <td>{{ $history->uploader->name ?? '-' }}</td>
-                                            <td>{{ $history->description ?: '-' }}</td>
+                                            <td>{{ $history->review_note ?: $history->description ?: '-' }}</td>
                                             <td>{{ optional($history->created_at)->format('d/m/Y H:i') ?: '-' }}</td>
                                             <td class="text-nowrap">
                                                 <a href="{{ route('admin.documents.show', $history) }}" class="btn btn-sm btn-outline-secondary">
@@ -299,13 +320,13 @@
                         <i class="bi bi-download me-1"></i> Download / Lihat File
                     </a>
 
-                    @if($canManage && $document->status === 'draft' && ($role !== 'k3_officer' || $isOwner))
+                    @if($canEdit)
                         <a href="{{ route('admin.documents.edit', $document) }}" class="btn btn-warning">
                             <i class="bi bi-pencil me-1"></i> Edit Dokumen
                         </a>
                     @endif
 
-                    @if($canManage && $document->status === 'approved' && ($role !== 'k3_officer' || $isOwner))
+                    @if($canRevise)
                         <form action="{{ route('admin.documents.revise', $document) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-outline-warning w-100"
@@ -315,7 +336,7 @@
                         </form>
                     @endif
 
-                    @if($document->status === 'draft' && $canManage && ($role !== 'k3_officer' || $isOwner))
+                    @if($canSubmitReview)
                         <form action="{{ route('admin.documents.submitReview', $document) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-info text-white w-100">
