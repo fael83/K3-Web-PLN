@@ -15,7 +15,6 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TeamK3Controller;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,17 +81,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
 
-    // ─── USER & ORGANIZATION MANAGEMENT ─────────────────────────────────────
+    // ─── USER & ORGANIZATION MANAGEMENT ────────────────────────────────
     Route::middleware('role:sys_admin')->group(function () {
-
-        // 6.2 User Management
         Route::resource('users', UserManagementController::class);
+
         Route::patch('/users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
             ->name('users.toggle-active');
+
         Route::patch('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
             ->name('users.reset-password');
 
-        // 6.2.1 Organization Structure
         Route::get('/organization', [OrganizationController::class, 'index'])
             ->name('organization.index');
 
@@ -115,20 +113,15 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::delete('/organization/work-unit/{workUnit}', [OrganizationController::class, 'destroyWorkUnit'])
             ->name('organization.work-unit.destroy');
     });
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // ─── AUDIT SUPPORT ───────────────────────────────────────────────────────
+    // ─── AUDIT SUPPORT ─────────────────────────────────────────────────
     Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {
-
-        // 6.6.1 Audit Trail
         Route::get('/audit-log', [AuditLogController::class, 'index'])
             ->name('audit.index');
 
-        // 6.6.2 Audit Checklist
         Route::resource('audit-checklist', AuditChecklistController::class)
             ->names('audit-checklist');
 
-        // Item per checklist
         Route::post('/audit-checklist/{auditChecklist}/item', [AuditChecklistController::class, 'addItem'])
             ->name('audit-checklist.item.store');
         Route::put('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'updateItem'])
@@ -136,15 +129,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::delete('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'destroyItem'])
             ->name('audit-checklist.item.destroy');
 
-        // 6.6.3 Evidence Package
         Route::get('/audit-evidence', [AuditChecklistController::class, 'evidenceIndex'])
             ->name('audit-evidence.index');
         Route::post('/audit-evidence/generate', [AuditChecklistController::class, 'evidenceGenerate'])
             ->name('audit-evidence.generate');
     });
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // ─── DOCUMENT MANAGEMENT ──────────────────────────────────────────────
+    // ─── DOCUMENT MANAGEMENT ───────────────────────────────────────────
     Route::prefix('documents')->name('documents.')->group(function () {
 
         // Lihat daftar dokumen
@@ -188,7 +179,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->middleware('role:sys_admin,k3_manager')
             ->whereNumber('document');
 
-        // ✅ Route baru: buat revisi dari dokumen approved
+        // Buat revisi dari dokumen approved
         Route::post('/{document}/revise', [DocumentController::class, 'revise'])
             ->name('revise')
             ->middleware('role:sys_admin,k3_manager,k3_officer')
@@ -200,14 +191,18 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->middleware('role:sys_admin,k3_manager')
             ->whereNumber('document');
 
-        // Detail dokumen — TARUH PALING BAWAH
+        // Preview PDF in-browser
+        Route::get('/{document}/preview', [DocumentController::class, 'preview'])
+            ->name('preview')
+            ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer')
+            ->whereNumber('document');
+
+        // Detail dokumen — taruh paling bawah
         Route::get('/{document}', [DocumentController::class, 'show'])
             ->name('show')
             ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer')
             ->whereNumber('document');
     });
-    // ──────────────────────────────────────────────────────────────────────
-
 });
 
 /*
