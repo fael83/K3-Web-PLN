@@ -12,6 +12,8 @@ class Incident extends Model
     protected $table = 'incidents';
 
     protected $fillable = [
+        'reporter_id',
+        'department_id',
         'incident_type',
         'title',
         'description',
@@ -39,4 +41,14 @@ class Incident extends Model
         'investigasi' => 'Investigasi',
         'selesai'     => 'Selesai',
     ];
+
+    public function reporter()
+    {
+        return $this->belongsTo(User::class, 'reporter_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

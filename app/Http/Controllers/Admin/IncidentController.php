@@ -7,6 +7,7 @@ use App\Models\Incident;
 use App\Services\SupabaseStorageService;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IncidentController extends Controller
 {
@@ -14,8 +15,15 @@ class IncidentController extends Controller
 
     public function index()
     {
-        $items = Incident::orderByDesc('incident_date')->paginate(10);
+        $user = Auth::user();
+        $query = Incident::orderByDesc('incident_date');
 
+        // Department Head hanya lihat insiden departemennya
+        if ($user->role === 'department_head' && $user->department_id) {
+            $query->where('department_id', $user->department_id);
+        }
+
+        $items = $query->paginate(10);
         return view('admin.incident.index', compact('items'));
     }
 
@@ -28,6 +36,10 @@ class IncidentController extends Controller
     {
         $data = $this->validateData($request);
 
+        // Otomatis isi dari user yang login
+        $data['reporter_id']   = Auth::user()->id;
+        $data['department_id'] = Auth::user()->department_id;
+
         if ($request->hasFile('evidence')) {
             $data['evidence_url'] = $this->storage->upload($request->file('evidence'), 'incidents');
         }
@@ -35,7 +47,8 @@ class IncidentController extends Controller
         $item = Incident::create($data);
         AuditLogger::record('Insiden', 'create', "Mencatat insiden: {$item->title}");
 
-        return redirect()->route('admin.incident.index')->with('success', 'Data insiden berhasil ditambahkan.');
+        return redirect()->route('admin.incident.index')
+            ->with('success', 'Data insiden berhasil ditambahkan.');
     }
 
     public function edit(Incident $incident)
@@ -71,6 +84,8 @@ class IncidentController extends Controller
     protected function validateData(Request $request): array
     {
         $validated = $request->validate([
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'reporter_id'   => ['nullable', 'exists:users,id'],
             'incident_type'     => ['required', 'in:'.implode(',', array_keys(Incident::TYPES))],
             'title'             => ['required', 'string', 'max:255'],
             'description'       => ['nullable', 'string'],
