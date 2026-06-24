@@ -17,7 +17,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TeamK3Controller;
 
 // ── Halaman Publik ─────────────────────────────────────────────────────────
 Route::controller(PublicController::class)->group(function () {
@@ -70,8 +69,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // sys_admin: full CRUD + toggle + reset password
     Route::middleware('role:sys_admin')->group(function () {
         Route::resource('users', UserManagementController::class);
+
         Route::patch('/users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
             ->name('users.toggle-active');
+
         Route::patch('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
             ->name('users.reset-password');
     });

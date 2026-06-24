@@ -86,7 +86,7 @@
                             name="search"
                             class="form-control"
                             value="{{ request('search') }}"
-                            placeholder="Judul atau nomor dokumen">
+                            placeholder="Judul, nomor dokumen, deskripsi...">
                     </div>
 
                     <div class="col-md-2">
@@ -115,12 +115,14 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Departemen</label>
-                        <input
-                            type="text"
-                            name="department"
-                            class="form-control"
-                            value="{{ request('department') }}"
-                            placeholder="Contoh: K3 / HR / Teknik">
+                        <select name="department" class="form-select">
+                            <option value="">Semua Departemen</option>
+                            @foreach(($departments ?? []) as $department)
+                                <option value="{{ $department }}" {{ request('department') === $department ? 'selected' : '' }}>
+                                    {{ $department }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="col-12 d-flex flex-wrap gap-2">
@@ -135,6 +137,10 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <div class="mb-3 text-muted small">
+        Menampilkan {{ $documents->total() }} dokumen.
     </div>
 
     <div class="card shadow-sm border-0">
