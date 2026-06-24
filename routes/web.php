@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditChecklistController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\HazardController;
 use App\Http\Controllers\Admin\HealthProgramController;
 use App\Http\Controllers\Admin\IncidentController;
@@ -14,13 +15,10 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Halaman Publik (tanpa login)
-|--------------------------------------------------------------------------
-*/
+// ── Halaman Publik ─────────────────────────────────────────────────────────
 Route::controller(PublicController::class)->group(function () {
     Route::get('/', 'home')->name('public.home');
     Route::get('/profil', 'profil')->name('public.profil');
@@ -35,26 +33,12 @@ Route::controller(PublicController::class)->group(function () {
     Route::get('/kesimpulan-saran', 'kesimpulan')->name('public.kesimpulan');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Autentikasi Admin
-|--------------------------------------------------------------------------
-*/
+// ── Autentikasi ────────────────────────────────────────────────────────────
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->middleware('guest')->name('login.attempt');
+Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::post('/login', [LoginController::class, 'login'])
-    ->middleware('guest')
-    ->name('login.attempt');
-
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
-
-/*
-|--------------------------------------------------------------------------
-| Panel Admin (wajib login)
-|--------------------------------------------------------------------------
-*/
+// ── Panel Admin ────────────────────────────────────────────────────────────
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
@@ -81,7 +65,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
 
-    // ─── USER & ORGANIZATION MANAGEMENT ────────────────────────────────
+    // ── USER MANAGEMENT ────────────────────────────────────────────────────
+    // sys_admin: full CRUD + toggle + reset password
     Route::middleware('role:sys_admin')->group(function () {
         Route::resource('users', UserManagementController::class);
 
@@ -90,144 +75,107 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
         Route::patch('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
             ->name('users.reset-password');
+    });
 
+    // k3_officer + k3_manager + sys_admin: lihat daftar user per departemen
+    Route::middleware('role:sys_admin,k3_manager,k3_officer')->group(function () {
+        Route::get('/users-by-dept', [UserManagementController::class, 'byDepartment'])
+            ->name('users.by-department');
+    });
+
+    // ── ORGANIZATION ───────────────────────────────────────────────────────
+    // Tampilan read-only: sys_admin, k3_manager, k3_officer, auditor
+    Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {
         Route::get('/organization', [OrganizationController::class, 'index'])
             ->name('organization.index');
+    });
 
+    // Write: hanya sys_admin
+    Route::middleware('role:sys_admin')->group(function () {
         Route::post('/organization/division', [OrganizationController::class, 'storeDivision'])
             ->name('organization.division.store');
         Route::put('/organization/division/{division}', [OrganizationController::class, 'updateDivision'])
             ->name('organization.division.update');
         Route::delete('/organization/division/{division}', [OrganizationController::class, 'destroyDivision'])
             ->name('organization.division.destroy');
-
         Route::post('/organization/department', [OrganizationController::class, 'storeDepartment'])
             ->name('organization.department.store');
         Route::put('/organization/department/{department}', [OrganizationController::class, 'updateDepartment'])
             ->name('organization.department.update');
         Route::delete('/organization/department/{department}', [OrganizationController::class, 'destroyDepartment'])
             ->name('organization.department.destroy');
-
         Route::post('/organization/work-unit', [OrganizationController::class, 'storeWorkUnit'])
             ->name('organization.work-unit.store');
         Route::delete('/organization/work-unit/{workUnit}', [OrganizationController::class, 'destroyWorkUnit'])
             ->name('organization.work-unit.destroy');
     });
 
-    // ─── AUDIT SUPPORT ─────────────────────────────────────────────────
+    // ── AUDIT ──────────────────────────────────────────────────────────────
     Route::middleware('role:sys_admin,k3_manager,k3_officer,auditor')->group(function () {
-        Route::get('/audit-log', [AuditLogController::class, 'index'])
-            ->name('audit.index');
-
-        Route::resource('audit-checklist', AuditChecklistController::class)
-            ->names('audit-checklist');
-
+        Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit.index');
+        Route::resource('audit-checklist', AuditChecklistController::class)->names('audit-checklist');
         Route::post('/audit-checklist/{auditChecklist}/item', [AuditChecklistController::class, 'addItem'])
             ->name('audit-checklist.item.store');
         Route::put('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'updateItem'])
             ->name('audit-checklist.item.update');
         Route::delete('/audit-checklist/{auditChecklist}/item/{item}', [AuditChecklistController::class, 'destroyItem'])
             ->name('audit-checklist.item.destroy');
-
         Route::get('/audit-evidence', [AuditChecklistController::class, 'evidenceIndex'])
             ->name('audit-evidence.index');
         Route::post('/audit-evidence/generate', [AuditChecklistController::class, 'evidenceGenerate'])
             ->name('audit-evidence.generate');
     });
 
-    // ─── DOCUMENT MANAGEMENT ───────────────────────────────────────────
+    // ── DOKUMEN ────────────────────────────────────────────────────────────
     Route::prefix('documents')->name('documents.')->group(function () {
-
-        // Lihat daftar dokumen
-        Route::get('/', [DocumentController::class, 'index'])
-            ->name('index')
+        Route::get('/', [DocumentController::class, 'index'])->name('index')
             ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer');
-
-        // Upload dokumen baru
-        Route::get('/create', [DocumentController::class, 'create'])
-            ->name('create')
+        Route::get('/create', [DocumentController::class, 'create'])->name('create')
             ->middleware('role:sys_admin,k3_manager,k3_officer');
-
-        Route::post('/', [DocumentController::class, 'store'])
-            ->name('store')
+        Route::post('/', [DocumentController::class, 'store'])->name('store')
             ->middleware('role:sys_admin,k3_manager,k3_officer');
-
-        // Edit draft
-        Route::get('/{document}/edit', [DocumentController::class, 'edit'])
-            ->name('edit')
-            ->middleware('role:sys_admin,k3_manager,k3_officer')
-            ->whereNumber('document');
-
-        Route::put('/{document}', [DocumentController::class, 'update'])
-            ->name('update')
-            ->middleware('role:sys_admin,k3_manager,k3_officer')
-            ->whereNumber('document');
-
-        // Workflow review
-        Route::post('/{document}/submit-review', [DocumentController::class, 'submitReview'])
-            ->name('submitReview')
-            ->middleware('role:sys_admin,k3_manager,k3_officer')
-            ->whereNumber('document');
-
-        Route::post('/{document}/approve', [DocumentController::class, 'approve'])
-            ->name('approve')
-            ->middleware('role:sys_admin,k3_manager')
-            ->whereNumber('document');
-
-        Route::post('/{document}/reject', [DocumentController::class, 'reject'])
-            ->name('reject')
-            ->middleware('role:sys_admin,k3_manager')
-            ->whereNumber('document');
-
-        // Buat revisi dari dokumen approved
-        Route::post('/{document}/revise', [DocumentController::class, 'revise'])
-            ->name('revise')
-            ->middleware('role:sys_admin,k3_manager,k3_officer')
-            ->whereNumber('document');
-
-        // Hapus dokumen
-        Route::delete('/{document}', [DocumentController::class, 'destroy'])
-            ->name('destroy')
-            ->middleware('role:sys_admin,k3_manager')
-            ->whereNumber('document');
-
-        // Preview PDF in-browser
-        Route::get('/{document}/preview', [DocumentController::class, 'preview'])
-            ->name('preview')
-            ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer')
-            ->whereNumber('document');
-
-        // Detail dokumen — taruh paling bawah
-        Route::get('/{document}', [DocumentController::class, 'show'])
-            ->name('show')
+        Route::get('/{document}/edit', [DocumentController::class, 'edit'])->name('edit')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')->whereNumber('document');
+        Route::put('/{document}', [DocumentController::class, 'update'])->name('update')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')->whereNumber('document');
+        Route::post('/{document}/submit-review', [DocumentController::class, 'submitReview'])->name('submitReview')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')->whereNumber('document');
+        Route::post('/{document}/approve', [DocumentController::class, 'approve'])->name('approve')
+            ->middleware('role:sys_admin,k3_manager')->whereNumber('document');
+        Route::post('/{document}/reject', [DocumentController::class, 'reject'])->name('reject')
+            ->middleware('role:sys_admin,k3_manager')->whereNumber('document');
+        Route::post('/{document}/revise', [DocumentController::class, 'revise'])->name('revise')
+            ->middleware('role:sys_admin,k3_manager,k3_officer')->whereNumber('document');
+        Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy')
+            ->middleware('role:sys_admin,k3_manager')->whereNumber('document');
+        Route::get('/{document}', [DocumentController::class, 'show'])->name('show')
             ->middleware('role:sys_admin,k3_manager,k3_officer,department_head,employee,auditor,viewer')
             ->whereNumber('document');
     });
-});
 
-/*
-|--------------------------------------------------------------------------
-| Debug / Testing
-|--------------------------------------------------------------------------
-*/
-Route::get('/cek-php', function () {
-    return [
-        'php_version' => phpversion(),
-        'loaded_ini' => php_ini_loaded_file(),
-        'pdo_pgsql' => extension_loaded('pdo_pgsql'),
-        'pgsql' => extension_loaded('pgsql'),
-    ];
-});
-
-Route::middleware(['auth', 'role:sys_admin'])
-    ->get('/tes-role', function () {
-        return 'Middleware Role Berhasil';
+    // ── EXPORT ─────────────────────────────────────────────────────────────
+    Route::prefix('export')->name('export.')->group(function () {
+        Route::middleware('role:sys_admin,k3_manager,k3_officer,department_head,auditor')->group(function () {
+            Route::get('/incident/pdf',   [ExportController::class, 'incidentPdf'])->name('incident.pdf');
+            Route::get('/incident/excel', [ExportController::class, 'incidentExcel'])->name('incident.excel');
+        });
+        Route::middleware('role:sys_admin,k3_manager,auditor')->group(function () {
+            Route::get('/dashboard/pdf', [ExportController::class, 'dashboardPdf'])->name('dashboard.pdf');
+        });
     });
 
-Route::middleware('auth')->get('/cek-role', function () {
-    return [
-        'name' => auth()->user()->name,
-        'email' => auth()->user()->email,
-        'role' => auth()->user()->role,
-    ];
 });
+
+// ── Debug ──────────────────────────────────────────────────────────────────
+Route::get('/cek-php', fn() => [
+    'php_version' => phpversion(),
+    'loaded_ini'  => php_ini_loaded_file(),
+    'pdo_pgsql'   => extension_loaded('pdo_pgsql'),
+    'pgsql'       => extension_loaded('pgsql'),
+]);
+Route::middleware(['auth','role:sys_admin'])->get('/tes-role', fn() => 'Middleware Role Berhasil');
+Route::middleware('auth')->get('/cek-role', fn() => [
+    'name'  => Auth::user()->name,
+    'email' => Auth::user()->email,
+    'role'  => Auth::user()->role,
+]);

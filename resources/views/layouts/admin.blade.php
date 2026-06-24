@@ -129,15 +129,33 @@
         {{-- ── SISTEM ── --}}
         <div class="nav-section">Sistem</div>
 
+        {{-- Manajemen Pengguna: hanya sys_admin --}}
         @if($role === 'sys_admin')
             <a href="{{ route('admin.users.index') }}"
-               class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+               class="nav-link {{ request()->routeIs('admin.users.index', 'admin.users.create', 'admin.users.edit', 'admin.users.show') ? 'active' : '' }}">
                 <i class="bi bi-people"></i> Manajemen Pengguna
             </a>
+        @endif
 
+        {{-- Pengguna per Dept: sys_admin, k3_manager, k3_officer --}}
+        @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer']))
+            <a href="{{ route('admin.users.by-department') }}"
+               class="nav-link {{ request()->routeIs('admin.users.by-department') ? 'active' : '' }}">
+                <i class="bi bi-person-lines-fill"></i>
+                @if($role === 'k3_officer') Pengguna per Dept
+                @else Pengguna per Departemen
+                @endif
+            </a>
+        @endif
+
+        {{-- Struktur Organisasi: sys_admin (edit), k3_manager, k3_officer, auditor (read-only) --}}
+        @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer', 'auditor']))
             <a href="{{ route('admin.organization.index') }}"
                class="nav-link {{ request()->routeIs('admin.organization.*') ? 'active' : '' }}">
                 <i class="bi bi-diagram-3"></i> Struktur Organisasi
+                @if($role !== 'sys_admin')
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1" style="font-size:.6rem;">lihat</span>
+                @endif
             </a>
         @endif
 
