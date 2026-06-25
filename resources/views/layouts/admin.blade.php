@@ -38,7 +38,7 @@
 @endphp
 
 <aside class="sidebar" id="sidebar">
-    {{-- Bagian Brand: Logo Sejajar dengan Teks --}}
+    {{-- Brand --}}
     <div class="brand d-flex align-items-center gap-3 p-3 mb-2 border-bottom border-secondary">
         <div class="flex-shrink-0">
             <img src="{{ asset('assets/Logo_PLN.png') }}" alt="Logo PLN" style="height: 45px; width: auto;" class="d-block">
@@ -85,6 +85,12 @@
                class="nav-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
                 <i class="bi bi-heart-pulse"></i> Program Kesehatan
             </a>
+
+            {{-- Monitoring Forms — kelola template (admin/manager/officer) --}}
+            <a href="{{ route('admin.monitoring-forms.index') }}"
+               class="nav-link {{ request()->routeIs('admin.monitoring-forms.*') ? 'active' : '' }}">
+                <i class="bi bi-ui-checks-grid"></i> Monitoring Forms
+            </a>
         @endif
 
         {{-- ── DOKUMEN ── --}}
@@ -98,11 +104,38 @@
             </a>
         @endif
 
-        {{-- Insiden --}}
+        {{-- ── INSIDEN ── --}}
         @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer', 'department_head', 'employee']))
             <a href="{{ route('admin.incident.index') }}"
                class="nav-link {{ request()->routeIs('admin.incident.*') ? 'active' : '' }}">
                 <i class="bi bi-clipboard-data"></i> Insiden
+            </a>
+        @endif
+
+        {{-- ── MONITORING ── --}}
+        {{-- Employee: isi form monitoring --}}
+        @if($role === 'employee')
+            <div class="nav-section">Monitoring</div>
+            <a href="{{ route('admin.monitoring-submissions.index') }}"
+               class="nav-link {{ request()->routeIs('admin.monitoring-submissions.index', 'admin.monitoring-submissions.create', 'admin.monitoring-submissions.show') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check"></i> Monitoring Forms
+            </a>
+        @endif
+
+        {{-- dept_head: lihat submissions departemennya --}}
+        @if($role === 'department_head')
+            <div class="nav-section">Monitoring</div>
+            <a href="{{ route('admin.monitoring-submissions.index') }}"
+               class="nav-link {{ request()->routeIs('admin.monitoring-submissions.*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check"></i> Monitoring Dept
+            </a>
+        @endif
+
+        {{-- admin/manager/officer: lihat semua submissions --}}
+        @if(in_array($role, ['sys_admin', 'k3_manager', 'k3_officer']))
+            <a href="{{ route('admin.monitoring-submissions.admin.index') }}"
+               class="nav-link {{ request()->routeIs('admin.monitoring-submissions.admin.*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-data"></i> Monitoring Submissions
             </a>
         @endif
 
