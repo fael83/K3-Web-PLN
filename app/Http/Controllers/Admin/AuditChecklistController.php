@@ -63,7 +63,7 @@ class AuditChecklistController extends Controller
         if (!empty($data['items'])) {
             foreach ($data['items'] as $i => $item) {
                 AuditItem::create([
-                    'audit_id'   => $audit->id,
+                    'audit_checklist_id' => $audit->id,
                     'item_name'  => $item['item_name'],
                     'description'=> $item['description'] ?? null,
                     'status'     => 'pending',
@@ -155,7 +155,7 @@ class AuditChecklistController extends Controller
         $order = $auditChecklist->items()->max('sort_order') + 1;
 
         AuditItem::create([
-            'audit_id'   => $auditChecklist->id,
+            'audit_checklist_id' => $auditChecklist->id,
             'item_name'  => $data['item_name'],
             'description'=> $data['description'] ?? null,
             'status'     => 'pending',

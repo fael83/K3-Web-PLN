@@ -12,7 +12,7 @@ class AuditItem extends Model
     protected $table = 'audit_items';
 
     protected $fillable = [
-        'audit_id',
+        'audit_checklist_id',   // ← fix: sesuai kolom di DB setelah migration
         'item_name',
         'description',
         'status',
@@ -40,6 +40,6 @@ class AuditItem extends Model
 
     public function audit()
     {
-        return $this->belongsTo(AuditChecklist::class, 'audit_id');
+        return $this->belongsTo(AuditChecklist::class, 'audit_checklist_id');
     }
 }
