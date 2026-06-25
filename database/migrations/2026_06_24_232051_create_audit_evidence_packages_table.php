@@ -8,20 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('audit_evidence_packages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('audit_checklist_id')->constrained('audit_checklists')->cascadeOnDelete();
-            $table->string('package_code')->unique();
-            $table->enum('status', ['draft', 'final'])->default('draft');
-            $table->text('notes')->nullable();
-            $table->foreignId('generated_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('generated_at')->nullable();
-            $table->timestamps();
-        });
+        // Hanya jalankan jika kolom audit_id masih ada (belum di-rename)
+        if (Schema::hasColumn('audit_items', 'audit_id') &&
+            !Schema::hasColumn('audit_items', 'audit_checklist_id')) {
+
+            Schema::table('audit_items', function (Blueprint $table) {
+                $table->renameColumn('audit_id', 'audit_checklist_id');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('audit_evidence_packages');
+        if (Schema::hasColumn('audit_items', 'audit_checklist_id') &&
+            !Schema::hasColumn('audit_items', 'audit_id')) {
+
+            Schema::table('audit_items', function (Blueprint $table) {
+                $table->renameColumn('audit_checklist_id', 'audit_id');
+            });
+        }
     }
 };

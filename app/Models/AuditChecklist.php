@@ -24,8 +24,16 @@ class AuditChecklist extends Model
     ];
 
     protected $casts = [
+        'audit_date' => 'date',
         'period_start' => 'date',
         'period_end' => 'date',
+    ];
+
+    public const TYPES = [
+        'internal'  => 'Internal',
+        'eksternal' => 'Eksternal',
+        'smk3'      => 'SMK3',
+        'iso45001'  => 'ISO 45001',
     ];
 
     public const STATUSES = [
