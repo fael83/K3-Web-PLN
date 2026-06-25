@@ -17,6 +17,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeamK3Controller;
+use App\Http\Controllers\Admin\MonitoringFormController;
+use App\Http\Controllers\Admin\MonitoringSubmissionController;
 
 // ── Halaman Publik ─────────────────────────────────────────────────────────
 Route::controller(PublicController::class)->group(function () {
@@ -65,8 +68,69 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('team', TeamMemberController::class)->except('show');
     });
 
-    // ── USER MANAGEMENT ────────────────────────────────────────────────────
-    // sys_admin: full CRUD + toggle + reset password
+    // Monitoring Forms
+    Route::middleware(
+        'role:sys_admin,k3_manager,k3_officer'
+    )->group(function () {
+
+        Route::resource(
+            'monitoring-forms',
+            MonitoringFormController::class
+        )->only([
+            'index',
+            'create',
+            'store',
+            'show'
+        ]);
+
+        Route::post(
+            '/monitoring-forms/{monitoring_form}/fields',
+            [MonitoringFormController::class, 'storeField']
+        )->name('monitoring-forms.fields.store');
+
+        Route::get(
+    '/monitoring-submissions',
+    [MonitoringSubmissionController::class,'adminIndex']
+)->name('monitoring-submissions.admin.index');
+
+Route::get(
+    '/monitoring-submissions/{submission}',
+    [MonitoringSubmissionController::class,'show']
+)->name('monitoring-submissions.show');
+
+Route::post(
+    '/monitoring-submissions/{submission}/approve',
+    [MonitoringSubmissionController::class,'approve']
+)->name('monitoring-submissions.approve');
+
+Route::post(
+    '/monitoring-submissions/{submission}/reject',
+    [MonitoringSubmissionController::class,'reject']
+)->name('monitoring-submissions.reject');
+    });
+
+
+    Route::middleware(
+    'role:employee'
+    )->group(function () {
+
+        Route::get(
+            '/my-monitoring-forms',
+            [MonitoringSubmissionController::class, 'index']
+        )->name('monitoring-submissions.index');
+
+        Route::get(
+            '/my-monitoring-forms/{form}',
+            [MonitoringSubmissionController::class, 'create']
+        )->name('monitoring-submissions.create');
+
+        Route::post(
+            '/my-monitoring-forms/{form}',
+            [MonitoringSubmissionController::class, 'store']
+        )->name('monitoring-submissions.store');
+    });
+
+    // ─── USER & ORGANIZATION MANAGEMENT ─────────────────────────────────────
     Route::middleware('role:sys_admin')->group(function () {
         Route::resource('users', UserManagementController::class);
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\MonitoringSubmission;
 
 class User extends Authenticatable
 {
@@ -64,5 +65,13 @@ class User extends Authenticatable
     public function getRoleLabelAttribute(): string
     {
         return self::ROLES[$this->role] ?? $this->role;
+    }
+
+    public function monitoringSubmissions()
+    {
+        return $this->hasMany(
+            MonitoringSubmission::class,
+            'user_id'
+        );
     }
 }
