@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
@@ -34,40 +34,48 @@ class Document extends Model
         'approved_at'    => 'datetime',
     ];
 
-    // Relasi ke user yang upload
     public function uploader()
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-    // Relasi ke user yang approve
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    // Relasi ke semua versi dokumen
     public function versions()
     {
         return $this->hasMany(DocumentVersion::class)->orderByDesc('revision_number');
     }
 
-    // Scope: dokumen yang hampir expired (review_date < 30 hari lagi)
     public function scopeExpiringSoon($query)
     {
         return $query->whereNotNull('review_date')
-                     ->whereDate('review_date', '<=', now()->addDays(30))
-                     ->whereDate('review_date', '>=', now())
-                     ->where('status', 'approved');
+            ->whereDate('review_date', '<=', now()->addDays(30))
+            ->whereDate('review_date', '>=', now())
+            ->where('status', 'approved');
     }
 
-    // Scope: filter by status
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
     }
 
-    // Helper: cek apakah dokumen bisa di-approve
+    public function scopeSearch($query, ?string $term)
+    {
+        if (!$term) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($term) {
+            $q->where('title', 'ilike', "%{$term}%")
+                ->orWhere('document_number', 'ilike', "%{$term}%")
+                ->orWhere('description', 'ilike', "%{$term}%")
+                ->orWhere('owner_department', 'ilike', "%{$term}%");
+        });
+    }
+
     public function canBeApproved(): bool
     {
         return $this->status === 'under_review';

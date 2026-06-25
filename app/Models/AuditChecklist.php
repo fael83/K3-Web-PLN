@@ -13,34 +13,44 @@ class AuditChecklist extends Model
 
     protected $fillable = [
         'title',
-        'description',
-        'audit_type',
-        'audit_date',
+        'audit_code',
+        'period_start',
+        'period_end',
+        'scope',
         'auditor_name',
         'status',
+        'summary',
         'created_by',
     ];
 
     protected $casts = [
         'audit_date' => 'date',
+        'period_start' => 'date',
+        'period_end' => 'date',
     ];
 
     public const TYPES = [
-        'internal'  => 'Audit Internal',
-        'eksternal' => 'Audit Eksternal',
-        'smk3'      => 'Audit SMK3',
-        'iso45001'  => 'Audit ISO 45001',
+        'internal'  => 'Internal',
+        'eksternal' => 'Eksternal',
+        'smk3'      => 'SMK3',
+        'iso45001'  => 'ISO 45001',
     ];
 
     public const STATUSES = [
         'draft'       => 'Draft',
         'in_progress' => 'Sedang Berlangsung',
         'completed'   => 'Selesai',
+        'archived'    => 'Diarsipkan',
     ];
 
     public function items()
     {
-        return $this->hasMany(AuditItem::class, 'audit_id')->orderBy('sort_order');
+        return $this->hasMany(AuditItem::class, 'audit_checklist_id')->orderBy('sort_order');
+    }
+
+    public function evidencePackages()
+    {
+        return $this->hasMany(AuditEvidencePackage::class, 'audit_checklist_id');
     }
 
     public function creator()
@@ -48,23 +58,23 @@ class AuditChecklist extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function getConformanceCountAttribute(): int
+    public function getCompliantCountAttribute(): int
     {
-        return $this->items->where('status', 'conformance')->count();
-    }
-
-    public function getMinorNcCountAttribute(): int
-    {
-        return $this->items->where('status', 'minor_nc')->count();
-    }
-
-    public function getMajorNcCountAttribute(): int
-    {
-        return $this->items->where('status', 'major_nc')->count();
+        return $this->items->where('compliance_status', 'compliant')->count();
     }
 
     public function getObservationCountAttribute(): int
     {
-        return $this->items->where('status', 'observation')->count();
+        return $this->items->where('compliance_status', 'observation')->count();
+    }
+
+    public function getMinorCountAttribute(): int
+    {
+        return $this->items->where('compliance_status', 'minor')->count();
+    }
+
+    public function getMajorCountAttribute(): int
+    {
+        return $this->items->where('compliance_status', 'major')->count();
     }
 }
